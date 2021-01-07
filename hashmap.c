@@ -150,16 +150,17 @@ void map_remove(Map map, void* key)
 {
    /* Remove a key/value pair from the map 
     *
-    * Returns nothing because there are no (discovered)
-    * possible errors.
+    * Returns
+    * -------
+    * Nothing.
     */
 
     uint64_t hash = FNV1a_hash(key, map->key_size);
-    int index = hash % map->buckets_list_length;
+    int index     = hash % map->buckets_list_length;
     struct hashmap_list_node* current_node = map->buckets_list[index].first_node;
     struct hashmap_list_node* prev_node    = NULL;
 
-    while (current_node->next != NULL) {
+    while (current_node != NULL) {
         if (!strncmp(current_node->key, key, map->key_size)) {
             if (prev_node == NULL) {
                 map->buckets_list[index].first_node = current_node->next;
@@ -170,10 +171,12 @@ void map_remove(Map map, void* key)
             free(current_node->key);
             free(current_node->val);
             free(current_node);
-        }
 
-        prev_node = current_node;
-        current_node = current_node->next;
+            return;
+        } else {
+            prev_node    = current_node;
+            current_node = current_node->next;
+        }
     }
 }
 
@@ -186,7 +189,7 @@ void map_destroy(Map map)
         current_node = map->buckets_list[i].first_node;
 
         while (current_node != NULL) {
-            prev_node = current_node;
+            prev_node    = current_node;
             current_node = current_node->next;
 
             free(prev_node->key);
