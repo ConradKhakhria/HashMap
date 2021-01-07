@@ -10,10 +10,10 @@
 
 #include "hashmap.h"
 
-uint64_t FNV1a_hash(void * input, int input_length)
+uint64_t FNV1a_hash(void* input, int input_length)
 {
     /* FNV-1a hashing algorithm, for internal use */
-    uint8_t * byte_array = (uint8_t *)input;
+    uint8_t* byte_array = (uint8_t *)input;
     uint64_t hash = 0xcbf29ce484222325;
 
     for (int i = 0; i < input_length; i++)
@@ -35,23 +35,25 @@ Map makemap(size_t keysize, size_t valsize)
     * 
     * Returns
     * -------
-    * A 'map' object, which is a struct pointer, or NULL if there are any
+    * A 'Map' object, which is a struct pointer, or NULL if there are any
     * malloc-related errors
     */
 
     Map returnmap = malloc(sizeof(struct _map));
 
-    if (returnmap == NULL)
+    if (returnmap == NULL) {
         return NULL;
+    }
 
-    returnmap->buckets_list = malloc(sizeof(struct _bucket) * 0x10000);
+    returnmap->buckets_list = malloc(sizeof(struct hashmap_bucket) * 0x10000);
     returnmap->buckets_list_length = 0x10000;
     returnmap->key_size   = keysize;
     returnmap->data_size  = valsize;
     returnmap->item_count = 0;
 
-    if (returnmap == NULL)
+    if (returnmap == NULL) {
         return NULL;
+    }
 
     for (int i = 0; i < 0x10000; i++) {
         returnmap->buckets_list[i].first_node = NULL;
@@ -71,23 +73,25 @@ int map_assign(Map map, void * key, void * val)
     * was already in the map, -1 if there are malloc-related errors.
     */
 
-    void * valcpy = malloc(map->data_size);
-    void * keycpy = malloc(map->key_size);
+    void* valcpy = malloc(map->data_size);
+    void* keycpy = malloc(map->key_size);
 
-    if (valcpy == NULL || keycpy == NULL)
+    if (valcpy == NULL || keycpy == NULL) {
         return -1;
+    }
 
     memcpy(valcpy, val, map->data_size);
     memcpy(keycpy, key, map->key_size);
 
+    struct hashmap_list_node* new_node;
     uint64_t hash  = FNV1a_hash(key, map->key_size);
-    int index = hash % map->buckets_list_length;
-    _list_node new_node;
+    int index      = hash % map->buckets_list_length;
 
-    new_node = malloc(sizeof(struct _list_node));
+    new_node = malloc(sizeof(struct hashmap_list_node));
 
-    if (new_node == NULL)
+    if (new_node == NULL) {
         return -1;
+    }
 
     new_node->key  = keycpy;
     new_node->next = NULL;
@@ -100,7 +104,7 @@ int map_assign(Map map, void * key, void * val)
 
         return 0;
     } else {
-        _list_node current_node = map->buckets_list[index].first_node;
+        struct hashmap_list_node* current_node = map->buckets_list[index].first_node;
 
         while (current_node->next != NULL) {
             if (!strncmp(current_node->key, keycpy, map->key_size)) {
@@ -117,7 +121,7 @@ int map_assign(Map map, void * key, void * val)
     }
 }
 
-void * map_get(Map map, void * key)
+void* map_get(Map map, void * key)
 {
    /* Get the value associated with a given key
     *
@@ -128,20 +132,21 @@ void * map_get(Map map, void * key)
     */
 
     uint64_t hash = FNV1a_hash(key, map->key_size);
-    int index = hash % map->buckets_list_length;
-    _list_node current_node = map->buckets_list[index].first_node;
+    int index     = hash % map->buckets_list_length;
+    struct hashmap_list_node* current_node = map->buckets_list[index].first_node;
 
     while (current_node != NULL) {
-        if (!strncmp(current_node->key, key, map->key_size))
+        if (!strncmp(current_node->key, key, map->key_size)) {
             return current_node->val;
-        else
+        } else {
             current_node = current_node->next;
+        }
     }
 
     return NULL;
 }
 
-void map_remove(Map map, void * key)
+void map_remove(Map map, void* key)
 {
    /* Remove a key/value pair from the map 
     *
@@ -151,8 +156,8 @@ void map_remove(Map map, void * key)
 
     uint64_t hash = FNV1a_hash(key, map->key_size);
     int index = hash % map->buckets_list_length;
-    _list_node current_node = map->buckets_list[index].first_node;
-    _list_node prev_node = NULL;
+    struct hashmap_list_node* current_node = map->buckets_list[index].first_node;
+    struct hashmap_list_node* prev_node    = NULL;
 
     while (current_node->next != NULL) {
         if (!strncmp(current_node->key, key, map->key_size)) {
@@ -175,7 +180,7 @@ void map_remove(Map map, void * key)
 void map_destroy(Map map)
 {
     /* Free's all memory allocated for the map */
-    _list_node current_node, prev_node;
+    struct hashmap_list_node* current_node, *prev_node;
 
     for (int i = 0; i < map->buckets_list_length; i++) {
         current_node = map->buckets_list[i].first_node;
