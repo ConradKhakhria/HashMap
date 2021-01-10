@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -32,6 +33,7 @@ typedef struct _map {
 Map makemap(size_t keysize, size_t valsize);
 int map_assign(Map map, void* key, void* val);
 void* map_get(Map map, void* key);
+bool map_contains(Map map, void* key);
 void map_remove(Map map, void* key);
 
 /* Other function primitives */

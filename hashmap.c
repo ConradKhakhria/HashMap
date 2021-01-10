@@ -121,7 +121,7 @@ int map_assign(Map map, void * key, void * val)
     }
 }
 
-void* map_get(Map map, void * key)
+void* map_get(Map map, void* key)
 {
    /* Get the value associated with a given key
     *
@@ -144,6 +144,13 @@ void* map_get(Map map, void * key)
     }
 
     return NULL;
+}
+
+bool map_contains(Map map, void* key)
+{
+    /* Returns whether or not a map contains a value for a given key */
+
+    return map_get(map, key) != NULL;
 }
 
 void map_remove(Map map, void* key)
